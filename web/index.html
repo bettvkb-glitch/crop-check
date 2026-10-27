@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- One family, only the weights we use, swap so text shows instantly on slow networks -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+  <title>Crop Check</title>
+  <script>
+    (function () {
+      var t = localStorage.getItem("theme") || "light";
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
+</head>
+<body>
+  <div id="boot" class="boot" role="status" aria-label="Loading"></div>
+
+  <!-- ============ AUTH GATE ============ -->
+  <section id="auth" hidden>
+    <header class="site">
+      <div class="brand"><svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><defs><clipPath id="lf"><path d="M5 43C4 21 19 5 44 5c0 25-15 39-39 38z"/></clipPath></defs><g clip-path="url(#lf)"><rect width="48" height="48" fill="#0b0b0b"/><path d="M0 48 48 0v14L14 48z" fill="#c1121f"/><path d="M20 48 48 20v28z" fill="#00a35a"/></g><path d="M8 40 30 18" stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg><span class="brand-name">Crop<em>Check</em></span></div>
+      <span class="head-actions">
+        <button type="button" class="btn outline sm" data-go="signin">Login</button>
+        <button type="button" class="btn primary sm" data-go="signup">Register</button>
+      </span>
+    </header>
+
+    <!-- Landing -->
+    <div id="landing" class="page">
+      <div class="hero">
+        <span class="pill-badge">AI crop doctor for farmers</span>
+        <h1 class="hero-title">Healthy Crops for <span class="r">Every Farmer</span> <span class="g">Everywhere</span></h1>
+        <p class="hero-sub">Photograph a sick leaf. Get the diagnosis, a low-cost treatment plan and alerts from farms near you.</p>
+        <button type="button" class="btn primary" data-go="signup">Start scanning</button>
+        <button type="button" class="btn secondary block" data-go="signin">Sign In</button>
+      </div>
+      <div class="grid2 stats">
+        <div class="stat"><strong>SAM 3.1</strong><span>Isolates the leaf</span></div>
+        <div class="stat"><strong>Muse Spark</strong><span>Plans the treatment</span></div>
+        <div class="stat"><strong>Live</strong><span>Outbreak alerts</span></div>
+        <div class="stat"><strong>Free</strong><span>No card needed</span></div>
+      </div>
+
+      <!-- How it works -->
+      <section class="block" aria-labelledby="how-h">
+        <div class="section-head center"><span class="eyebrow">Simple as 1-2-3</span><h2 id="how-h">How Crop Check works</h2><p class="muted">From a photo in your hand to a plan for your field, in under a minute.</p></div>
+        <ol class="steps">
+          <li class="step"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg></span><div><h3><span class="num">1</span>Take a photo</h3><p>Photograph one damaged leaf with your phone, or pick a photo from your gallery.</p></div></li>
+          <li class="step"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/><path d="M8 13c0-2.6 1.8-4.2 4.6-4.2 0 2.7-1.7 4.2-4.6 4.2z"/></svg></span><div><h3><span class="num">2</span>We check the leaf</h3><p>Our AI isolates the leaf, looks at the spots, colour and shape, and names the most likely problem.</p></div></li>
+          <li class="step"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9z"/><path d="M8 5.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6.5a1 1 0 0 0-1-1h-2"/><path d="m9 14 2 2 4-4"/></svg></span><div><h3><span class="num">3</span>Get your plan</h3><p>See what to do today, low-cost and organic options first, and how to stop it spreading.</p></div></li>
+        </ol>
+      </section>
+
+      <!-- What you get -->
+      <section class="block" aria-labelledby="get-h">
+        <div class="section-head center"><span class="eyebrow">Built for farmers</span><h2 id="get-h">What you get</h2></div>
+        <div class="feats">
+          <div class="feat"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/><path d="M8 13c0-2.6 1.8-4.2 4.6-4.2 0 2.7-1.7 4.2-4.6 4.2z"/></svg></span><h3>Clear diagnosis</h3><p>The disease or pest name, how sure we are, and how serious it is.</p></div>
+          <div class="feat"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9z"/><path d="M8 5.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6.5a1 1 0 0 0-1-1h-2"/><path d="m9 14 2 2 4-4"/></svg></span><h3>Practical treatment</h3><p>Affordable and organic steps first. Chemical options only when needed.</p></div>
+          <div class="feat"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span><h3>Outbreak alerts</h3><p>See serious cases reported by farmers near you, updated live.</p></div>
+          <div class="feat"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span><h3>Private by design</h3><p>Your name is never shared and locations are rounded to about 1 km.</p></div>
+        </div>
+      </section>
+
+      <!-- How to use -->
+      <section class="block card" aria-labelledby="tips-h">
+        <div class="section-head"><span class="eyebrow">How to use it</span><h2 id="tips-h">Tips for a good photo</h2><p class="muted">A clear photo gives a more accurate answer.</p></div>
+        <ul class="ticks">
+          <li><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Use natural daylight. Avoid deep shade and camera flash.</span></li>
+          <li><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Fill the frame with <b>one</b> affected leaf.</span></li>
+          <li><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Hold steady so the spots and edges are sharp.</span></li>
+          <li><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Show both the damaged area and a little healthy leaf.</span></li>
+          <li><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Add the crop name if you know it (maize, cassava, tomato...).</span></li>
+        </ul>
+      </section>
+
+      <p class="note"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19C5 10 11 4 20 4c0 9-6 15-15 15z"/><path d="M5 19 13 11"/></svg><span><b>Guidance, not a lab test.</b> When Crop Check is not sure, it says so and suggests showing the leaf to your local agriculture officer.</span></p>
+
+      <!-- FAQ -->
+      <section class="block" aria-labelledby="faq-h">
+        <div class="section-head center"><span class="eyebrow">Good to know</span><h2 id="faq-h">Questions farmers ask</h2></div>
+        <div class="faq">
+          <details><summary>Is Crop Check free?</summary><p>Yes. Create an account and scan as many leaves as you need. No card is required.</p></details>
+          <details><summary>How accurate is it?</summary><p>Every result shows how confident the AI is. Clear, close photos work best. If the result is uncertain, we tell you and suggest seeing an agriculture officer.</p></details>
+          <details><summary>Is my information private?</summary><p>Your scans are visible only to you. Only serious, high-confidence diagnoses are shared as anonymous outbreak reports, with no name and a location rounded to about 1 km.</p></details>
+          <details><summary>Do I need internet?</summary><p>Yes, a connection is needed to check a leaf and to see nearby outbreaks. Photos are compressed first, so it works on slower mobile data.</p></details>
+          <details><summary>Which crops does it cover?</summary><p>It is built for common field and garden crops such as maize, cassava and tomato. Type the crop name when you scan to help the result.</p></details>
+        </div>
+      </section>
+
+      <!-- Closing call to action -->
+      <section class="cta-band" aria-labelledby="cta-h">
+        <h2 id="cta-h">Protect your harvest today</h2>
+        <p>Catch crop disease early, treat it right and warn your neighbours.</p>
+        <button type="button" class="btn light" data-go="signup">Create free account</button>
+      </section>
+
+      <footer class="foot">
+        <p><b>Crop Check</b> · AI crop doctor for farmers</p>
+        <p>Always follow product labels and local officer advice when using chemicals.</p>
+      </footer>
+    </div>
+
+    <!-- Sign in / Register / Reset / New password -->
+    <div id="auth-panel" class="page" hidden>
+      <button type="button" id="auth-home" class="link">← Back to home</button>
+      <h2 id="auth-title" class="page-title">Welcome back</h2>
+      <p id="auth-sub" class="muted"></p>
+
+      <div id="seg" class="seg" role="tablist" aria-label="Account">
+        <button type="button" role="tab" id="tab-signin" data-mode="signin" aria-selected="true">Sign in</button>
+        <button type="button" role="tab" id="tab-signup" data-mode="signup" aria-selected="false">Register</button>
+      </div>
+
+      <form id="auth-form" class="card" novalidate>
+        <div class="field" id="f-name" hidden>
+          <label for="name">👤 Your name (optional)</label>
+          <input id="name" type="text" maxlength="40" autocomplete="name" />
+        </div>
+        <div class="field" id="f-email">
+          <label for="email">✉️ Email</label>
+          <input id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" />
+        </div>
+        <div class="field" id="f-pass">
+          <label for="password" id="pass-label">Password</label>
+          <span class="pw">
+            <input id="password" type="password" autocomplete="current-password" />
+            <button type="button" id="pw-toggle" class="pw-btn" aria-pressed="false" aria-controls="password">Show</button>
+          </span>
+        </div>
+        <p id="auth-msg" class="msg" role="alert" hidden></p>
+        <button id="auth-submit" class="btn primary block" type="submit">Sign in</button>
+        <button id="forgot" type="button" class="link">Forgot password?</button>
+        <button id="back" type="button" class="link" hidden>Back to sign in</button>
+      </form>
+
+      <p class="fine">Serious, confident diagnoses are shared as anonymous outbreak reports. They never include your name, and the location is rounded to about 1 km.</p>
+    </div>
+
+    <!-- Bottom tab bar on the public pages too; everything except Home asks you to sign in -->
+    <nav class="tabbar" aria-label="Main">
+      <button type="button" class="tab" id="auth-tab-home" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.2 12 3.5l8.5 6.7V19a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19z"/><path d="M9.5 20.5v-5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v5"/></svg><span>Home</span></button>
+      <button type="button" class="tab" data-go="signin"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/><path d="M8 13c0-2.6 1.8-4.2 4.6-4.2 0 2.7-1.7 4.2-4.6 4.2z"/></svg><span>Scan</span></button>
+      <button type="button" class="tab" data-go="signin"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>Outbreaks</span></button>
+      <button type="button" class="tab" id="auth-tab-profile" data-go="signin"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Profile</span></button>
+    </nav>
+  </section>
+
+  <!-- ============ PROTECTED DASHBOARD ============ -->
+  <div id="app" hidden>
+    <header class="site">
+      <div class="brand"><svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><defs><clipPath id="lf2"><path d="M5 43C4 21 19 5 44 5c0 25-15 39-39 38z"/></clipPath></defs><g clip-path="url(#lf2)"><rect width="48" height="48" fill="#0b0b0b"/><path d="M0 48 48 0v14L14 48z" fill="#c1121f"/><path d="M20 48 48 20v28z" fill="#00a35a"/></g><path d="M8 40 30 18" stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg><span class="brand-name">Crop<em>Check</em></span></div>
+      <div class="head-actions">
+        <span class="icon-btn soft" aria-hidden="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span>
+        <div class="profile">
+          <button id="avatar" class="icon-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="menu" aria-label="Account menu"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></button>
+          <div id="menu" class="menu" role="menu" hidden>
+            <p id="user-name" class="menu-name">…</p>
+            <p id="menu-email" class="menu-email"></p>
+            <button role="menuitem" class="js-theme">🌓 Switch light or dark</button>
+            <button role="menuitem" id="logout" class="danger">Sign out</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <!-- HOME -->
+      <section id="view-home" class="view" aria-labelledby="welcome">
+        <h2 id="welcome" class="page-title">Welcome, <span id="welcome-name"></span>!</h2>
+
+        <div class="card feature">
+          <h3 class="card-title"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M12 8c-3 2-3 6 0 8 3-2 3-6 0-8z"/></svg></span>Scan a Leaf</h3>
+          <p class="muted">Photograph one damaged leaf. Natural light works best.</p>
+
+          <div id="capture">
+            <input id="file" class="sr" type="file" accept="image/*" capture="environment" />
+            <label for="file" class="btn primary block">Take a Photo — It's Free</label>
+            <input id="file2" class="sr" type="file" accept="image/*" />
+            <label for="file2" class="btn secondary block">Choose from Gallery</label>
+          </div>
+
+          <div id="stage" class="stage" hidden><canvas id="preview" aria-label="Your crop photo"></canvas></div>
+
+          <div id="actions" class="actions" hidden>
+            <div class="field">
+              <label for="crop">🌽 Crop (optional)</label>
+              <input id="crop" type="text" maxlength="40" placeholder="Maize, cassava, tomato…" autocomplete="off" />
+            </div>
+            <button id="analyze" class="btn primary block">Check This Leaf →</button>
+            <button id="retake" class="btn secondary block">Take Another Photo</button>
+          </div>
+
+          <div id="status" class="status" role="status" aria-live="polite" hidden></div>
+        </div>
+
+        <article id="result" class="card result" hidden></article>
+
+        <div class="section-head">
+          <h2>Just reported</h2>
+          <p class="muted">New outbreaks from farms near you</p>
+        </div>
+        <div id="recent" class="rail" aria-label="Recent outbreak reports"></div>
+
+        <div class="grid2">
+          <div class="card info"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M12 8c-3 2-3 6 0 8 3-2 3-6 0-8z"/></svg></span><small>SCANS</small><strong id="st-scans">0</strong></div>
+          <div class="card info"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19C5 10 11 4 20 4c0 9-6 15-15 15z"/><path d="M5 19 13 11"/></svg></span><small>LAST CROP</small><strong id="st-crop">—</strong></div>
+          <div class="card info"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg></span><small>LAST RESULT</small><strong id="st-result">—</strong></div>
+          <div class="card info"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span><small>OUTBREAKS</small><strong id="st-out">0</strong></div>
+        </div>
+
+        <div class="card feature">
+          <h3 class="card-title"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span>Protect Your Neighbours</h3>
+          <p class="muted">Confident, serious diagnoses appear on the outbreak map without your name, so nearby farmers can act early.</p>
+          <button type="button" class="btn primary block" data-go-view="map">View Outbreaks</button>
+        </div>
+      </section>
+
+      <!-- OUTBREAKS -->
+      <section id="view-map" class="view" hidden aria-labelledby="map-h">
+        <h2 id="map-h" class="page-title">Nearby Outbreaks</h2>
+        <p class="muted">Reports from farmers around you, updated live.</p>
+        <ol id="signals" class="signals"></ol>
+        <p id="signals-empty" class="muted">No outbreaks reported yet. Confident, serious diagnoses appear here.</p>
+      </section>
+    </main>
+
+    <!-- Bottom tab bar (same pattern as Kenya Educators) -->
+    <nav class="tabbar" aria-label="Main">
+      <button type="button" class="tab nav-link on" data-view="home" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.2 12 3.5l8.5 6.7V19a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19z"/><path d="M9.5 20.5v-5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v5"/></svg><span>Home</span></button>
+      <button type="button" class="tab" id="tab-scan"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/><path d="M8 13c0-2.6 1.8-4.2 4.6-4.2 0 2.7-1.7 4.2-4.6 4.2z"/></svg><span>Scan</span></button>
+      <button type="button" class="tab nav-link" data-view="map"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>Outbreaks</span></button>
+      <button type="button" class="tab" id="tab-profile" aria-haspopup="menu"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Profile</span></button>
+    </nav>
+  </div>
+
+  <!-- Help button (hidden until SUPPORT_WHATSAPP is set in main.js) -->
+  <a id="fab" class="fab" href="#" target="_blank" rel="noopener" aria-label="Chat with an agronomist on WhatsApp" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>
+  </a>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

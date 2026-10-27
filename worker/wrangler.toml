@@ -1,0 +1,15 @@
+name = "cropcheck-api"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+[vars]
+META_BASE_URL = "https://api.meta.ai/v1"
+# Set to your Pages domain in production, e.g. "https://cropcheck.pages.dev"
+ALLOWED_ORIGIN = "http://localhost:5173"
+SUPABASE_URL = "https://YOUR-PROJECT.supabase.co"
+# Publishable (anon) key is safe to keep here; it is gated by RLS.
+SUPABASE_ANON_KEY = "YOUR-SUPABASE-ANON-KEY"
+
+# Secrets (never commit): run
+#   npx wrangler secret put MODEL_API_KEY
+# For local dev, put MODEL_API_KEY in worker/.dev.vars

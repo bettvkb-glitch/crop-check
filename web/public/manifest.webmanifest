@@ -1,0 +1,10 @@
+{
+  "name": "Crop Check",
+  "short_name": "Crop Check",
+  "description": "Photograph a sick crop leaf and get a diagnosis and treatment plan.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
