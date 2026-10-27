@@ -1,0 +1,11 @@
+{
+  "name": "crop-check",
+  "private": true,
+  "description": "Photograph a sick crop leaf, get a diagnosis and treatment plan, see confirmed outbreaks nearby.",
+  "scripts": {
+    "dev:web": "npm --prefix web run dev",
+    "dev:worker": "npm --prefix worker run dev",
+    "build": "npm --prefix web install && npm --prefix web run build",
+    "deploy:worker": "npm --prefix worker run deploy"
+  }
+}
