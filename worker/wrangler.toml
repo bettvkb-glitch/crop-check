@@ -5,7 +5,7 @@ compatibility_date = "2026-10-01"
 [vars]
 META_BASE_URL = "https://api.meta.ai/v1"
 # Set to your Pages domain in production, e.g. "https://cropcheck.pages.dev"
-ALLOWED_ORIGIN = "http://localhost:5173"
+ALLOWED_ORIGIN = "https://crop-check.pages.dev"
 SUPABASE_URL = "https://kbmhslxnhhllrbrvgbtx.supabase.co"
 # Publishable (anon) key is safe to keep here; it is gated by RLS.
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtibWhzbHhuaGhsbHJicnZnYnR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwNjExNjgsImV4cCI6MjEwODYzNzE2OH0.v7ZOS8psPSobAGuWhuEEHkPjsK6J_zpB2kmTKHnZGS4"
