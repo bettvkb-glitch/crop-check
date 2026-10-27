@@ -1,0 +1,20 @@
+name: Unpack Crop Check zip
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          unzip -q crop-check.zip -d _unpack
+          cp -r _unpack/crop-check/. .
+          rm -rf _unpack crop-check.zip
+      - run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -m "Add Crop Check project"
+          git push
