@@ -263,3 +263,5 @@ svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-widt
 #mode-seg { grid-template-columns: repeat(3, 1fr); }
 #mode-seg button { font-size: 0.9rem; padding: 0 4px; }
 .result .safe { padding: 12px 14px; border-radius: 14px; border: 1px solid var(--alert); }
+.field textarea { width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; font-size: 1rem; line-height: 1.4; resize: vertical; min-height: 96px; }
+.field textarea::placeholder { color: var(--muted); opacity: 0.7; }

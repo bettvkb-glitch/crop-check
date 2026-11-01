@@ -154,7 +154,7 @@ if (SUPPORT_WHATSAPP) {
 // =====================================================================
 const el = {
   file: $("file"), capture: $("capture"), stage: $("stage"), preview: $("preview"),
-  actions: $("actions"), crop: $("crop"), part: $("part"), partTip: $("part-tip"), analyze: $("analyze"), retake: $("retake"),
+  actions: $("actions"), crop: $("crop"), notes: $("notes"), part: $("part"), partTip: $("part-tip"), analyze: $("analyze"), retake: $("retake"),
   status: $("status"), result: $("result"), signals: $("signals"), empty: $("signals-empty"),
 };
 
@@ -162,9 +162,9 @@ let currentImage = null; // JPEG data URL, max 1280px on the long edge
 let scanMode = "diagnose"; // "diagnose" = check a problem, "advise" = preventive advice
 
 const MODE_TEXT = {
-  diagnose: { sub: "Photograph the damaged part: leaf, stem, root, fruit or the whole plant. Natural light works best.", btn: "Check This Crop →" },
-  advise: { sub: "Photograph a healthy crop or your field. We tell you what to watch for, when to spray, weed and feed, and how to grow a better harvest.", btn: "Get Advice →" },
-  chemical: { sub: "Photograph the label of the chemical you want to use. We tell you if it suits your crop, when to apply it and how to stay safe.", btn: "Check This Chemical →" },
+  diagnose: { notes: "What happened? When did you first notice it? What did you already do, and which chemicals did you use?", sub: "Photograph the damaged part: leaf, stem, root, fruit or the whole plant. Natural light works best.", btn: "Check This Crop →" },
+  advise: { notes: "What do you want help with? Crop age, what you planted, soil, rain, what you did so far, your goal for this season.", sub: "Photograph a healthy crop or your field. We tell you what to watch for, when to spray, weed and feed, and how to grow a better harvest.", btn: "Get Advice →" },
+  chemical: { notes: "What do you want to use it for? What problem are you fighting? What did you spray before, and when?", sub: "Photograph the label of the chemical you want to use. We tell you if it suits your crop, when to apply it and how to stay safe.", btn: "Check This Chemical →" },
 };
 function setMode(m) {
   scanMode = m;
@@ -172,6 +172,7 @@ function setMode(m) {
   $("scan-sub").textContent = MODE_TEXT[m].sub;
   el.analyze.textContent = MODE_TEXT[m].btn;
   $("part-field").hidden = m === "chemical";
+  el.notes.placeholder = MODE_TEXT[m].notes;
   el.result.hidden = true;
   setStatus();
 }
@@ -210,13 +211,15 @@ const PART_TIPS = {
 };
 function showPartTip() { el.partTip.textContent = PART_TIPS[el.part.value] || ""; }
 el.part.addEventListener("change", showPartTip);
+function updateNotesCount() { $("notes-count").textContent = `${el.notes.value.length} / 800`; }
+el.notes.addEventListener("input", updateNotesCount);
 showPartTip();
 
 el.retake.addEventListener("click", resetScan);
 function resetScan() {
   currentImage = null;
   el.file.value = ""; $("file2").value = "";
-  el.crop.value = "";
+  el.crop.value = ""; el.notes.value = ""; updateNotesCount();
   el.part.value = "leaf"; showPartTip(); setMode("diagnose");
   el.capture.hidden = false; el.stage.hidden = true; el.actions.hidden = true; el.result.hidden = true;
   setStatus();
@@ -255,7 +258,7 @@ el.analyze.addEventListener("click", async () => {
     const res = await fetch(`${API}/api/scan`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` },
-      body: JSON.stringify({ image: currentImage, crop: el.crop.value.trim() || undefined, part: el.part.value, mode, ...loc }),
+      body: JSON.stringify({ image: currentImage, crop: el.crop.value.trim() || undefined, part: el.part.value, mode, notes: el.notes.value.trim() || undefined, ...loc }),
     });
     const body = await res.json();
     if (res.status === 401) { await signOut(); return; }
