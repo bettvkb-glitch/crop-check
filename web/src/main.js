@@ -175,6 +175,7 @@ function setMode(m) {
   $("scan-sub").textContent = MODE_TEXT[m].sub;
   el.analyze.textContent = MODE_TEXT[m].btn;
   $("part-field").hidden = m === "chemical";
+  $("video-row").hidden = m === "chemical";
   el.notes.placeholder = MODE_TEXT[m].notes;
   showPartTip();
   el.result.hidden = true;
@@ -198,6 +199,7 @@ async function onPick(inp) {
   setStatus("Preparing photo…");
   try {
     currentImage = await compress(f);
+    currentFrames = null;
     el.capture.hidden = true; el.stage.hidden = false; el.actions.hidden = false; el.result.hidden = true;
     setStatus();
   } catch {
@@ -230,9 +232,110 @@ function updateNotesCount() { $("notes-count").textContent = `${el.notes.value.l
 el.notes.addEventListener("input", updateNotesCount);
 showPartTip();
 
+// ---------- video: up to 15 seconds, sent to the AI as 8 frames ----------
+const VIDEO_SECONDS = 15, MAX_FRAMES = 8, FRAME_EDGE = 768;
+let currentFrames = null; // array of JPEG data URLs when the farmer used a video
+
+function grabFrame(source, w, h) {
+  const s = Math.min(1, FRAME_EDGE / Math.max(w, h));
+  const c = document.createElement("canvas");
+  c.width = Math.round(w * s); c.height = Math.round(h * s);
+  c.getContext("2d").drawImage(source, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.7);
+}
+
+async function useFrames(frames) {
+  currentFrames = frames;
+  currentImage = frames[0];
+  const img = new Image();
+  await new Promise((ok, no) => { img.onload = ok; img.onerror = no; img.src = frames[Math.floor(frames.length / 2)]; });
+  el.preview.width = img.width; el.preview.height = img.height;
+  el.preview.getContext("2d").drawImage(img, 0, 0);
+  el.capture.hidden = true; el.stage.hidden = false; el.actions.hidden = false; el.result.hidden = true;
+  setStatus(`Video ready. ${frames.length} frames will be checked.`);
+}
+
+// Pick a video from the gallery: use its first 15 seconds
+$("vfile").addEventListener("change", async (e) => {
+  const f = e.target.files?.[0];
+  if (!f) return;
+  setStatus("Preparing video…");
+  const url = URL.createObjectURL(f);
+  try {
+    const v = document.createElement("video");
+    v.muted = true; v.playsInline = true; v.preload = "auto"; v.src = url;
+    await new Promise((ok, no) => { v.onloadedmetadata = ok; v.onerror = no; });
+    const dur = Math.min(v.duration || VIDEO_SECONDS, VIDEO_SECONDS);
+    const n = dur < 4 ? 3 : MAX_FRAMES;
+    const frames = [];
+    for (let i = 0; i < n; i++) {
+      const seeked = new Promise((ok) => { v.onseeked = ok; setTimeout(ok, 4000); });
+      v.currentTime = ((i + 0.5) * dur) / n;
+      await seeked;
+      frames.push(grabFrame(v, v.videoWidth, v.videoHeight));
+    }
+    await useFrames(frames);
+    if (v.duration > VIDEO_SECONDS + 0.5) setStatus(`That video is longer than ${VIDEO_SECONDS} seconds, so we used the first ${VIDEO_SECONDS}.`);
+  } catch {
+    setStatus("We couldn't read that video. Try recording it again.", true);
+  } finally {
+    URL.revokeObjectURL(url);
+    e.target.value = "";
+  }
+});
+
+// Record in the app: live camera for 15 seconds, then it stops by itself
+let camStream = null, camTimer = null, camFrames = [];
+const CAM_HINTS = [[0, "Show the whole plant"], [4, "Move slowly to the damaged part"], [9, "Close-up of the problem"]];
+
+async function openCam() {
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 } }, audio: false });
+  } catch {
+    setStatus("We couldn't open the camera. Use \"Choose a Video\" instead.", true);
+    return;
+  }
+  $("cam-video").srcObject = camStream;
+  $("cam").hidden = false;
+  $("cam-start").hidden = false; $("cam-done").hidden = true;
+  $("cam-time").textContent = `${VIDEO_SECONDS}s`;
+  $("cam-hint").textContent = "Hold steady in daylight, then press Start.";
+}
+function closeCam() {
+  clearInterval(camTimer); camTimer = null;
+  camStream?.getTracks().forEach((t) => t.stop()); camStream = null;
+  $("cam-video").srcObject = null;
+  $("cam").hidden = true;
+}
+function startCam() {
+  const v = $("cam-video"), t0 = Date.now();
+  camFrames = [];
+  $("cam-start").hidden = true;
+  camTimer = setInterval(() => {
+    const t = (Date.now() - t0) / 1000;
+    $("cam-time").textContent = `${Math.max(0, Math.ceil(VIDEO_SECONDS - t))}s`;
+    $("cam-hint").textContent = [...CAM_HINTS].reverse().find(([s]) => t >= s)[1];
+    if (v.videoWidth) {
+      while (camFrames.length < MAX_FRAMES && t >= 0.5 + camFrames.length * 2) camFrames.push(grabFrame(v, v.videoWidth, v.videoHeight));
+    }
+    if (camFrames.length >= 3) $("cam-done").hidden = false;
+    if (t >= VIDEO_SECONDS) finishCam();
+  }, 200);
+}
+function finishCam() {
+  const frames = camFrames; camFrames = [];
+  closeCam();
+  if (frames.length >= 3) useFrames(frames);
+  else setStatus("The recording was too short. Hold the phone steady for at least 5 seconds.", true);
+}
+$("rec").addEventListener("click", openCam);
+$("cam-start").addEventListener("click", startCam);
+$("cam-done").addEventListener("click", finishCam);
+$("cam-cancel").addEventListener("click", () => { camFrames = []; closeCam(); });
+
 el.retake.addEventListener("click", resetScan);
 function resetScan() {
-  currentImage = null;
+  currentImage = null; currentFrames = null;
   el.file.value = ""; $("file2").value = "";
   el.crop.value = ""; el.notes.value = ""; updateNotesCount();
   el.part.value = "leaf"; showPartTip(); setMode("diagnose");
@@ -273,7 +376,7 @@ el.analyze.addEventListener("click", async () => {
     const res = await fetch(`${API}/api/scan`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` },
-      body: JSON.stringify({ image: currentImage, crop: el.crop.value.trim() || undefined, part: el.part.value, mode, notes: el.notes.value.trim() || undefined, ...loc }),
+      body: JSON.stringify({ ...(currentFrames ? { images: currentFrames } : { image: currentImage }), crop: el.crop.value.trim() || undefined, part: el.part.value, mode, notes: el.notes.value.trim() || undefined, ...loc }),
     });
     const body = await res.json();
     if (res.status === 401) { await signOut(); return; }

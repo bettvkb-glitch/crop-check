@@ -191,6 +191,11 @@
             <label for="file" class="btn primary block">Take a Photo — It's Free</label>
             <input id="file2" class="sr" type="file" accept="image/*" />
             <label for="file2" class="btn secondary block">Choose from Gallery</label>
+            <div id="video-row" class="video-row">
+              <button type="button" id="rec" class="btn secondary block">🎥 Record a 15-second video</button>
+              <input id="vfile" class="sr" type="file" accept="video/*" />
+              <label for="vfile" class="btn secondary block">Choose a Video</label>
+            </div>
           </div>
 
           <div id="stage" class="stage" hidden><canvas id="preview" aria-label="Your crop photo"></canvas></div>
@@ -256,6 +261,19 @@
         <p id="signals-empty" class="muted">No outbreaks reported yet. Confident, serious diagnoses appear here.</p>
       </section>
     </main>
+
+    <div id="cam" class="cam" hidden role="dialog" aria-label="Record a short video">
+      <video id="cam-video" playsinline muted autoplay></video>
+      <div class="cam-bar">
+        <div id="cam-time" class="cam-time">15s</div>
+        <p id="cam-hint" class="cam-hint"></p>
+        <div class="cam-btns">
+          <button type="button" id="cam-cancel" class="btn secondary">Cancel</button>
+          <button type="button" id="cam-start" class="btn primary">Start</button>
+          <button type="button" id="cam-done" class="btn primary" hidden>Done</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Bottom tab bar (same pattern as Kenya Educators) -->
     <nav class="tabbar" aria-label="Main">
