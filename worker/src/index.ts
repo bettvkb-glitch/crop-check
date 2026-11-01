@@ -19,6 +19,18 @@ export interface Env {
 const MAX_IMAGE_BYTES = 3_000_000; // client compresses to ~300-600 KB; this is a hard cap
 const DATA_URL_RE = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
 
+const PARTS = ["leaf", "stem", "root", "fruit", "whole plant"] as const;
+type Part = (typeof PARTS)[number];
+
+// What SAM should look for, per plant part
+const SAM_CONCEPTS: Record<Part, string> = {
+  leaf: "diseased leaf",
+  stem: "damaged stem",
+  root: "damaged root",
+  fruit: "diseased fruit",
+  "whole plant": "diseased plant",
+};
+
 const SPARK_MODEL = "muse-spark-1.1";
 const SAM_MODEL = "sam-3.1";
 
@@ -127,11 +139,15 @@ Look at the crop photo and reply with ONLY a JSON object (no markdown) shaped li
   },
   "see_expert": boolean
 }
+The photo may show a leaf, stem, root, fruit/grain/pod, or the whole plant. The farmer tells you which.
+Check the signs that fit that part: leaf spots, blight, rust, mildew, yellowing and pests on leaves;
+cankers, lesions, borers and wilting on stems; rot, galls, nematodes and discoloration on roots;
+rot, spots, mould and insect holes on fruit; overall stunting, wilting or patchy growth on a whole plant.
 Rules: prefer low-cost options available to small farms. If confidence is under 0.6 or the
 photo is unclear, set see_expert to true and say what photo would help. Never invent a
 disease to sound certain.`;
 
-async function diagnose(env: Env, image: string, cropHint?: string) {
+async function diagnose(env: Env, image: string, cropHint?: string, part: Part = "leaf") {
   const data = await metaResponses(
     env,
     {
@@ -143,7 +159,10 @@ async function diagnose(env: Env, image: string, cropHint?: string) {
           type: "message",
           role: "user",
           content: [
-            { type: "input_text", text: cropHint ? `Crop (user says): ${cropHint}` : "Crop not specified." },
+            {
+              type: "input_text",
+              text: `Plant part photographed: ${part}. ${cropHint ? `Crop (user says): ${cropHint}` : "Crop not specified."}`,
+            },
             { type: "input_image", image_url: image },
           ],
         },
@@ -193,7 +212,7 @@ async function handleScan(req: Request, env: Env): Promise<Response> {
   const user = await getUser(env, token);
   if (!user) return json(env, req, { error: "Session expired. Reload the app." }, 401);
 
-  let body: { image?: string; crop?: string; lat?: number; lng?: number };
+  let body: { image?: string; crop?: string; part?: string; lat?: number; lng?: number };
   try {
     body = await req.json();
   } catch {
@@ -205,9 +224,10 @@ async function handleScan(req: Request, env: Env): Promise<Response> {
   if (image.length * 0.75 > MAX_IMAGE_BYTES) return json(env, req, { error: "Image too large. Try a closer, smaller photo." }, 413);
 
   const crop = typeof body.crop === "string" ? body.crop.slice(0, 40) : undefined;
+  const part: Part = PARTS.includes(body.part as Part) ? (body.part as Part) : "leaf";
 
   // Run both models at once; segmentation is a bonus, diagnosis is required.
-  const [diag, seg] = await Promise.allSettled([diagnose(env, image, crop), segment(env, image, "diseased leaf")]);
+  const [diag, seg] = await Promise.allSettled([diagnose(env, image, crop, part), segment(env, image, SAM_CONCEPTS[part])]);
 
   if (diag.status === "rejected") {
     console.error("diagnose failed", diag.reason);

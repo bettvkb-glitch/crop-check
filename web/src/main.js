@@ -154,7 +154,7 @@ if (SUPPORT_WHATSAPP) {
 // =====================================================================
 const el = {
   file: $("file"), capture: $("capture"), stage: $("stage"), preview: $("preview"),
-  actions: $("actions"), crop: $("crop"), analyze: $("analyze"), retake: $("retake"),
+  actions: $("actions"), crop: $("crop"), part: $("part"), partTip: $("part-tip"), analyze: $("analyze"), retake: $("retake"),
   status: $("status"), result: $("result"), signals: $("signals"), empty: $("signals-empty"),
 };
 
@@ -183,11 +183,23 @@ async function onPick(inp) {
   }
 }
 
+const PART_TIPS = {
+  leaf: "Fill the frame with one affected leaf.",
+  stem: "Show the damaged area up close, including a little healthy stem.",
+  root: "Clean off the soil first, then photograph the roots in good light.",
+  fruit: "Show the spots or damage on the fruit, grain or pod up close.",
+  "whole plant": "Stand back so the whole plant is in the photo, then take a second close-up if you can.",
+};
+function showPartTip() { el.partTip.textContent = PART_TIPS[el.part.value] || ""; }
+el.part.addEventListener("change", showPartTip);
+showPartTip();
+
 el.retake.addEventListener("click", resetScan);
 function resetScan() {
   currentImage = null;
   el.file.value = ""; $("file2").value = "";
   el.crop.value = "";
+  el.part.value = "leaf"; showPartTip();
   el.capture.hidden = false; el.stage.hidden = true; el.actions.hidden = true; el.result.hidden = true;
   setStatus();
 }
@@ -212,7 +224,7 @@ function getCoarseLocation() {
 el.analyze.addEventListener("click", async () => {
   if (!currentImage) return;
   el.analyze.disabled = true;
-  setStatus("Checking your leaf. This can take up to 30 seconds on a slow connection.");
+  setStatus(`Checking your ${el.part.value}. This can take up to 30 seconds on a slow connection.`);
   try {
     // getSession() refreshes an expired access token automatically.
     const [{ data }, loc] = await Promise.all([supabase.auth.getSession(), getCoarseLocation()]);
@@ -221,7 +233,7 @@ el.analyze.addEventListener("click", async () => {
     const res = await fetch(`${API}/api/scan`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` },
-      body: JSON.stringify({ image: currentImage, crop: el.crop.value.trim() || undefined, ...loc }),
+      body: JSON.stringify({ image: currentImage, crop: el.crop.value.trim() || undefined, part: el.part.value, ...loc }),
     });
     const body = await res.json();
     if (res.status === 401) { await signOut(); return; }
