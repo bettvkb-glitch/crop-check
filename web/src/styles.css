@@ -265,3 +265,5 @@ svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-widt
 .result .safe { padding: 12px 14px; border-radius: 14px; border: 1px solid var(--alert); }
 .field textarea { width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; font-size: 1rem; line-height: 1.4; resize: vertical; min-height: 96px; }
 .field textarea::placeholder { color: var(--muted); opacity: 0.7; }
+.map { height: 320px; border-radius: 18px; border: 1px solid var(--line); overflow: hidden; margin: 12px 0 6px; z-index: 0; }
+.leaflet-container { font: inherit; }

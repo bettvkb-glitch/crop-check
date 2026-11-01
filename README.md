@@ -25,7 +25,6 @@ supabase/  schema.sql (scans, outbreak_signals, RLS, Realtime)
 
 ## Known gaps (next steps)
 - SAM output parsing (`web/src/sam.js`): Meta's parser is Python/native; port the grammar to JS.
-- Real map (MapLibre/Leaflet) on top of the existing Realtime feed.
 - Rate limiting on `/api/scan` (Cloudflare Rate Limiting rules or a Durable Object).
 - Offline queue for scans taken without signal.
 

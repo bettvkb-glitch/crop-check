@@ -1,4 +1,6 @@
 import "./styles.css";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { supabase } from "./supabase.js";
 import { signOut, initAuthUI, displayName } from "./auth.js";
 import { parseSam, drawOverlay } from "./sam.js";
@@ -131,6 +133,7 @@ function go(view) {
   });
   $("view-home").hidden = view !== "home";
   $("view-map").hidden = view !== "map";
+  if (view === "map") showMap();
   window.scrollTo(0, 0);
 }
 document.querySelectorAll(".nav-link[data-view]").forEach((b) => b.addEventListener("click", () => go(b.dataset.view)));
@@ -164,7 +167,7 @@ let scanMode = "diagnose"; // "diagnose" = check a problem, "advise" = preventiv
 const MODE_TEXT = {
   diagnose: { notes: "What happened? When did you first notice it? What did you already do, and which chemicals did you use?", sub: "Photograph the damaged part: leaf, stem, root, fruit or the whole plant. Natural light works best.", btn: "Check This Crop →" },
   advise: { notes: "What do you want help with? Crop age, what you planted, soil, rain, what you did so far, your goal for this season.", sub: "Photograph a healthy crop or your field. We tell you what to watch for, when to spray, weed and feed, and how to grow a better harvest.", btn: "Get Advice →" },
-  chemical: { notes: "What do you want to use it for? What problem are you fighting? What did you spray before, and when?", sub: "Photograph the label of the chemical you want to use. We tell you if it suits your crop, when to apply it and how to stay safe.", btn: "Check This Chemical →" },
+  chemical: { notes: "What do you want to use it for? What problem are you fighting? What did you spray before, and when?", sub: "Photograph the label of the chemical you want to use. We tell you if it suits your crop, when to apply it and how to stay safe. Hold the label flat, close and in good light.", btn: "Check This Chemical →" },
 };
 function setMode(m) {
   scanMode = m;
@@ -173,6 +176,7 @@ function setMode(m) {
   el.analyze.textContent = MODE_TEXT[m].btn;
   $("part-field").hidden = m === "chemical";
   el.notes.placeholder = MODE_TEXT[m].notes;
+  showPartTip();
   el.result.hidden = true;
   setStatus();
 }
@@ -209,7 +213,18 @@ const PART_TIPS = {
   field: "Stand back and photograph your crop rows and what is around them: soil, weeds, water, bushes.",
   "whole plant": "Stand back so the whole plant is in the photo, then take a second close-up if you can.",
 };
-function showPartTip() { el.partTip.textContent = PART_TIPS[el.part.value] || ""; }
+const ADVISE_TIPS = {
+  leaf: "Photograph a healthy leaf up close. We look for early signs of trouble.",
+  stem: "Show the stem and where it meets the soil, so we can spot early problems.",
+  root: "Clean off the soil first, then photograph the roots in good light.",
+  fruit: "Show the fruit, grain or pod up close to judge how it is developing.",
+  "whole plant": "Stand back so the whole plant fits in the photo.",
+  field: "Stand back and photograph your crop rows and what is around them: soil, weeds, water, bushes.",
+};
+function showPartTip() {
+  const tips = scanMode === "advise" ? ADVISE_TIPS : PART_TIPS;
+  el.partTip.textContent = tips[el.part.value] || "";
+}
 el.part.addEventListener("change", showPartTip);
 function updateNotesCount() { $("notes-count").textContent = `${el.notes.value.length} / 800`; }
 el.notes.addEventListener("input", updateNotesCount);
@@ -409,7 +424,37 @@ function timeAgo(iso) {
   return `${Math.round(m / 1440)} d ago`;
 }
 let recentSignals = [];
+// ---------- real map (Leaflet + OpenStreetMap) ----------
+let map = null, mapLayer = null;
+function showMap() {
+  if (!map) {
+    map = L.map("map").setView([0.3, 37.9], 6); // Kenya; re-fits to the pins when there are reports
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18,
+      attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(map);
+    mapLayer = L.layerGroup().addTo(map);
+  }
+  setTimeout(() => { map.invalidateSize(); drawMap(true); }, 0); // map was hidden, so recompute its size
+}
+function drawMap(fit = false) {
+  if (!map) return;
+  mapLayer.clearLayers();
+  const pts = [];
+  for (const s of recentSignals) {
+    const lat = Number(s.lat), lng = Number(s.lng);
+    if (!isFinite(lat) || !isFinite(lng)) continue;
+    const severe = s.severity === "severe";
+    L.circleMarker([lat, lng], { radius: 11, color: severe ? "#c1121f" : "#d97706", weight: 2, fillOpacity: 0.55 })
+      .bindPopup(`<b>${esc(s.disease)}</b><br>${esc(s.crop || "Crop")} · ${esc(s.severity)}<br>${timeAgo(s.created_at)}`)
+      .addTo(mapLayer);
+    pts.push([lat, lng]);
+  }
+  if (fit && pts.length) map.fitBounds(L.latLngBounds(pts).pad(0.4), { maxZoom: 11 });
+}
+
 function drawRail() {
+  drawMap();
   const rail = $("recent");
   if (!recentSignals.length) {
     rail.innerHTML = `<div class="rail-card rail-empty">No outbreaks reported yet. Confident, serious diagnoses appear here.</div>`;

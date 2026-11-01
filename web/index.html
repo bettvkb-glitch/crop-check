@@ -41,7 +41,7 @@
         <button type="button" class="btn secondary block" data-go="signin">Sign In</button>
       </div>
       <div class="grid2 stats">
-        <div class="stat"><strong>SAM 3.1</strong><span>Isolates the leaf</span></div>
+        <div class="stat"><strong>Vision AI</strong><span>Reads your photo</span></div>
         <div class="stat"><strong>Muse Spark</strong><span>Plans the treatment</span></div>
         <div class="stat"><strong>Live</strong><span>Outbreak alerts</span></div>
         <div class="stat"><strong>Free</strong><span>No card needed</span></div>
@@ -52,7 +52,7 @@
         <div class="section-head center"><span class="eyebrow">Simple as 1-2-3</span><h2 id="how-h">How Crop Check works</h2><p class="muted">From a photo in your hand to a plan for your field, in under a minute.</p></div>
         <ol class="steps">
           <li class="step"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg></span><div><h3><span class="num">1</span>Take a photo</h3><p>Photograph the damaged leaf, stem, root, fruit or whole plant with your phone, or pick a photo from your gallery.</p></div></li>
-          <li class="step"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/><path d="M8 13c0-2.6 1.8-4.2 4.6-4.2 0 2.7-1.7 4.2-4.6 4.2z"/></svg></span><div><h3><span class="num">2</span>We check your crop</h3><p>Our AI isolates the damaged part, looks at the spots, colour and shape, and names the most likely problem.</p></div></li>
+          <li class="step"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/><path d="M8 13c0-2.6 1.8-4.2 4.6-4.2 0 2.7-1.7 4.2-4.6 4.2z"/></svg></span><div><h3><span class="num">2</span>We check your crop</h3><p>Our AI studies the damaged part, looking at the spots, colour and shape, and names the most likely problem.</p></div></li>
           <li class="step"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9z"/><path d="M8 5.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6.5a1 1 0 0 0-1-1h-2"/><path d="m9 14 2 2 4-4"/></svg></span><div><h3><span class="num">3</span>Get your plan</h3><p>See what to do today, low-cost and organic options first, and how to stop it spreading.</p></div></li>
         </ol>
       </section>
@@ -250,6 +250,8 @@
       <section id="view-map" class="view" hidden aria-labelledby="map-h">
         <h2 id="map-h" class="page-title">Nearby Outbreaks</h2>
         <p class="muted">Reports from farmers around you, updated live.</p>
+        <div id="map" class="map" role="region" aria-label="Map of reported outbreaks"></div>
+        <p class="fine">Red = severe, amber = moderate. Locations are rounded to about 1 km to protect farms. Tap a dot for details.</p>
         <ol id="signals" class="signals"></ol>
         <p id="signals-empty" class="muted">No outbreaks reported yet. Confident, serious diagnoses appear here.</p>
       </section>
