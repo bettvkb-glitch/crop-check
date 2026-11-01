@@ -24,7 +24,8 @@ supabase/  schema.sql (scans, outbreak_signals, RLS, Realtime)
    Then set the Worker's `ALLOWED_ORIGIN` to your Pages URL.
 
 ## Known gaps (next steps)
-- SAM output parsing (`web/src/sam.js`): Meta's parser is Python/native; port the grammar to JS.
+- SAM masks: `web/src/sam.js` now parses boxes from SAM 3.1 output and draws them on the photo. Mask payloads
+  (base85) are not decoded yet; use Meta's `@meta-sam/parser` (`decodeMaskToSVGPath`) to upgrade the overlay to outlines.
 - Rate limiting on `/api/scan` (Cloudflare Rate Limiting rules or a Durable Object).
 - Offline queue for scans taken without signal.
 

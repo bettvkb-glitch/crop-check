@@ -131,9 +131,8 @@ async function segment(env: Env, image: string, concept: string) {
     },
     20_000,
   );
-  // NOTE: SAM returns special-token text (boxes + encoded masks). Meta ships a
-  // parser (`meta-sam-parser`, Python/native). For the first build we pass the raw
-  // string through; see web/src/sam.js for the client-side TODO.
+  // NOTE: SAM returns special-token text (boxes + encoded masks). The raw string is passed
+  // through and web/src/sam.js parses the boxes (mask decoding is a documented next step).
   return { concept, raw: extractText(data) };
 }
 
