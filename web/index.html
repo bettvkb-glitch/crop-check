@@ -36,7 +36,7 @@
       <div class="hero">
         <span class="pill-badge">AI crop doctor for farmers</span>
         <h1 class="hero-title">Healthy Crops for <span class="r">Every Farmer</span> <span class="g">Everywhere</span></h1>
-        <p class="hero-sub">Photograph a sick leaf, stem, root or fruit. Get the diagnosis, a low-cost treatment plan and alerts from farms near you.</p>
+        <p class="hero-sub">Your one-stop farm helper. Photograph a sick plant, your field or a chemical label. Get the diagnosis, when to spray and weed, safety steps, a low-cost treatment plan and alerts from farms near you.</p>
         <button type="button" class="btn primary" data-go="signup">Start scanning</button>
         <button type="button" class="btn secondary block" data-go="signin">Sign In</button>
       </div>
@@ -86,6 +86,8 @@
       <section class="block" aria-labelledby="faq-h">
         <div class="section-head center"><span class="eyebrow">Good to know</span><h2 id="faq-h">Questions farmers ask</h2></div>
         <div class="faq">
+          <details><summary>Can it help before my crop gets sick?</summary><p>Yes. Choose "Get advice" and photograph a healthy crop or your field. You get early-warning risks to watch for, what to do this week, and low-cost ways to grow a better harvest, like advice from an agronomist.</p></details>
+          <details><summary>Can it check a chemical before I spray?</summary><p>Yes. Choose "Chemical" and photograph the label of the pack or bottle. You get what it is for, whether it suits your crop, the best time to spray, protective gear, safety steps and first aid. It only reads what is printed, so always follow the label itself.</p></details>
           <details><summary>Is Crop Check free?</summary><p>Yes. Create an account and scan as many crops as you need. No card is required.</p></details>
           <details><summary>How accurate is it?</summary><p>Every result shows how confident the AI is. Clear, close photos work best. If the result is uncertain, we tell you and suggest seeing an agriculture officer.</p></details>
           <details><summary>Is my information private?</summary><p>Your scans are visible only to you. Only serious, high-confidence diagnoses are shared as anonymous outbreak reports, with no name and a location rounded to about 1 km.</p></details>
@@ -177,7 +179,12 @@
 
         <div class="card feature">
           <h3 class="card-title"><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M12 8c-3 2-3 6 0 8 3-2 3-6 0-8z"/></svg></span>Scan Your Crop</h3>
-          <p class="muted">Photograph the damaged part: leaf, stem, root, fruit or the whole plant. Natural light works best.</p>
+          <div id="mode-seg" class="seg" role="tablist" aria-label="What do you need?">
+            <button type="button" role="tab" aria-selected="true" data-scan-mode="diagnose">Problem</button>
+            <button type="button" role="tab" aria-selected="false" data-scan-mode="advise">Advice</button>
+            <button type="button" role="tab" aria-selected="false" data-scan-mode="chemical">Chemical</button>
+          </div>
+          <p id="scan-sub" class="muted">Photograph the damaged part: leaf, stem, root, fruit or the whole plant. Natural light works best.</p>
 
           <div id="capture">
             <input id="file" class="sr" type="file" accept="image/*" capture="environment" />
@@ -189,7 +196,7 @@
           <div id="stage" class="stage" hidden><canvas id="preview" aria-label="Your crop photo"></canvas></div>
 
           <div id="actions" class="actions" hidden>
-            <div class="field">
+            <div class="field" id="part-field">
               <label for="part">🌿 Which part is it?</label>
               <select id="part">
                 <option value="leaf">Leaf</option>
@@ -197,6 +204,7 @@
                 <option value="root">Root</option>
                 <option value="fruit">Fruit / grain / pod</option>
                 <option value="whole plant">Whole plant</option>
+                <option value="field">Field / surroundings</option>
               </select>
               <small id="part-tip" class="muted"></small>
             </div>

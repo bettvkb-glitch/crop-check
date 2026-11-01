@@ -19,7 +19,7 @@ export interface Env {
 const MAX_IMAGE_BYTES = 3_000_000; // client compresses to ~300-600 KB; this is a hard cap
 const DATA_URL_RE = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
 
-const PARTS = ["leaf", "stem", "root", "fruit", "whole plant"] as const;
+const PARTS = ["leaf", "stem", "root", "fruit", "whole plant", "field"] as const;
 type Part = (typeof PARTS)[number];
 
 // What SAM should look for, per plant part
@@ -29,6 +29,7 @@ const SAM_CONCEPTS: Record<Part, string> = {
   root: "damaged root",
   fruit: "diseased fruit",
   "whole plant": "diseased plant",
+  field: "diseased plant",
 };
 
 const SPARK_MODEL = "muse-spark-1.1";
@@ -137,15 +138,22 @@ Look at the crop photo and reply with ONLY a JSON object (no markdown) shaped li
     "chemical_options": string[],  // active ingredients, not brand names
     "prevention": string[]
   },
+  "when_to_apply": string[],       // best time of day, weather and crop stage for each treatment
+  "safety": string[],              // protective gear and safe handling, required if any chemical is listed
   "see_expert": boolean
 }
-The photo may show a leaf, stem, root, fruit/grain/pod, or the whole plant. The farmer tells you which.
+The photo may show a leaf, stem, root, fruit/grain/pod, the whole plant, or the field and its surroundings. The farmer tells you which.
+For a field photo, judge drainage, weeds, shade, erosion, spacing and anything nearby that could harm the crop.
 Check the signs that fit that part: leaf spots, blight, rust, mildew, yellowing and pests on leaves;
 cankers, lesions, borers and wilting on stems; rot, galls, nematodes and discoloration on roots;
 rot, spots, mould and insect holes on fruit; overall stunting, wilting or patchy growth on a whole plant.
 Rules: prefer low-cost options available to small farms. If confidence is under 0.6 or the
 photo is unclear, set see_expert to true and say what photo would help. Never invent a
-disease to sound certain.`;
+disease to sound certain.
+For when_to_apply: spray in calm, dry weather in the early morning or late afternoon, not in midday
+heat, strong wind or just before rain. For safety: always say to read and follow the product label,
+wear gloves, a mask, long clothes and boots, never eat or drink while spraying, keep children,
+animals and water sources away, and wash hands and clothes afterwards.`;
 
 async function diagnose(env: Env, image: string, cropHint?: string, part: Part = "leaf") {
   const data = await metaResponses(
@@ -173,6 +181,139 @@ async function diagnose(env: Env, image: string, cropHint?: string, part: Part =
   const text = extractText(data).trim();
   const match = text.match(/\{[\s\S]*\}/); // tolerate stray text around the JSON
   if (!match) throw new Error("Diagnosis was not valid JSON");
+  return JSON.parse(match[0]);
+}
+
+const ADVICE_INSTRUCTIONS = `You are a senior agronomist advising smallholder farmers.
+The farmer photographed a crop (or field) to get PREVENTIVE advice before problems start.
+Reply with ONLY a JSON object (no markdown) shaped like:
+{
+  "crop": string,
+  "growth_stage": string,            // e.g. seedling, vegetative, flowering, fruiting, harvest-ready
+  "health_status": "excellent" | "good" | "fair" | "needs_attention",
+  "summary": string,                 // 1-2 plain sentences, 6th-grade reading level
+  "problem_spotted": string | null,  // only if a disease or pest is already visible
+  "going_well": string[],
+  "early_warnings": [
+    { "risk": string, "likelihood": "low" | "medium" | "high", "why": string, "prevent": string }
+  ],
+  "do_this_week": string[],
+  "improve_yield": string[],         // spacing, pruning, soil, water, feeding, weeding, mulching
+  "low_cost_or_organic": string[],
+  "next_season": string[],
+  "best_times": [                    // when to do each farm job for this crop and stage
+    { "task": string, "when": string, "why": string }   // tasks: spraying, weeding, fertilizing, watering
+  ],
+  "before_weeding": string[],        // what to do first, before weeding starts
+  "safety_basics": string[],         // safe handling if any chemical is involved
+  "ask_farmer": string[],            // things you cannot see that would sharpen the advice
+  "see_expert": boolean
+}
+Rules: give practical steps a small farm can afford, cheapest first. List at most 3 early_warnings,
+only risks that fit the crop, its growth stage and what you can see, and say "watch for", never
+claim certainty. You cannot see weather or soil, so say so in ask_farmer. Never recommend brand
+names. Mention chemicals only as a last resort, by active ingredient, and say to follow the label
+and wear protection. If the crop is not clear, set see_expert to true and say what photo would help.
+If the photo shows the field or surroundings, judge drainage, weeds, shade, erosion, spacing, bushes
+or standing water nearby, and whether the crop looks in good condition for this stage.
+Timing guidance: spray in calm, dry weather, early morning or late afternoon, never in midday heat,
+strong wind or just before rain, and avoid spraying open flowers when bees are active. Weed when the
+soil is moist and weeds are small, before they flower and set seed. Before weeding: tell crop
+seedlings from weeds, check the soil is not waterlogged, use clean sharp tools, keep away from crop
+roots, and plan where to put the pulled weeds. Apply fertilizer when the soil is moist, not in a dry
+spell or heavy rain. Always say product labels must be followed.`;
+
+async function advise(env: Env, image: string, cropHint?: string, part: Part = "leaf") {
+  const data = await metaResponses(
+    env,
+    {
+      model: SPARK_MODEL,
+      reasoning: { effort: "low" },
+      input: [
+        { type: "message", role: "system", content: [{ type: "input_text", text: ADVICE_INSTRUCTIONS }] },
+        {
+          type: "message",
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: `Plant part photographed: ${part}. ${cropHint ? `Crop (user says): ${cropHint}` : "Crop not specified."}`,
+            },
+            { type: "input_image", image_url: image },
+          ],
+        },
+      ],
+    },
+    30_000,
+  );
+  const text = extractText(data).trim();
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("Advice was not valid JSON");
+  return JSON.parse(match[0]);
+}
+
+const CHEMICAL_INSTRUCTIONS = `You are an agrochemical safety adviser for smallholder farmers.
+The photo shows a pesticide, herbicide, fungicide, fertilizer or other farm product (usually its label).
+Reply with ONLY a JSON object (no markdown) shaped like:
+{
+  "product_name": string | null,
+  "active_ingredients": string[],
+  "type": "herbicide" | "fungicide" | "insecticide" | "fertilizer" | "other" | "unknown",
+  "label_readable": boolean,
+  "what_its_for": string,
+  "suitable_for_crop": "yes" | "no" | "unsure",
+  "suitability_note": string,
+  "dose_and_mixing": string[],
+  "best_time_to_apply": string[],
+  "avoid": string[],
+  "protective_gear": string[],
+  "safety_steps": { "before": string[], "while_spraying": string[], "after": string[] },
+  "waiting_periods": string[],
+  "first_aid": string[],
+  "storage_and_disposal": string[],
+  "warnings": string[],
+  "see_expert": boolean
+}
+Rules: read only what is visible on the photo. NEVER invent a dose, mixing rate or waiting period.
+If a number is not clearly printed, write that it is not visible and the farmer must read the label
+or ask the agrovet. If the label is blurry or the product is unknown, set label_readable to false,
+say not to use it until it is identified, and say what photo would help. Say whether the product
+suits the crop the farmer named; if no crop is named, use "unsure". Say the label is the law and must
+be followed. best_time_to_apply: calm, dry weather, early morning or late afternoon, not in midday
+heat, strong wind or just before rain. avoid: spraying open flowers when bees are active, spraying
+near streams, wells or ponds, and spraying with children or animals nearby. protective_gear: gloves,
+mask or respirator, goggles, long sleeves and trousers, boots. safety_steps: before = read the label,
+check the sprayer for leaks, mix outdoors in a ventilated place; while_spraying = spray with the wind
+at your back, never eat, drink or smoke; after = wash hands, face and clothes, rinse the sprayer away
+from water. first_aid: general steps only, such as removing contaminated clothes, rinsing skin or eyes
+with clean water, and going to the nearest health facility with the container or label. Never induce
+vomiting unless the label says so. storage_and_disposal: keep in the original container, locked away
+from children and food, never reuse empty containers, return or dispose as the label says. If the
+product is banned, restricted or highly hazardous, say so in warnings. Plain language, 6th-grade level.`;
+
+async function checkChemical(env: Env, image: string, cropHint?: string) {
+  const data = await metaResponses(
+    env,
+    {
+      model: SPARK_MODEL,
+      reasoning: { effort: "low" },
+      input: [
+        { type: "message", role: "system", content: [{ type: "input_text", text: CHEMICAL_INSTRUCTIONS }] },
+        {
+          type: "message",
+          role: "user",
+          content: [
+            { type: "input_text", text: cropHint ? `Crop the farmer wants to apply it on: ${cropHint}` : "Crop not specified." },
+            { type: "input_image", image_url: image },
+          ],
+        },
+      ],
+    },
+    30_000,
+  );
+  const text = extractText(data).trim();
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("Chemical check was not valid JSON");
   return JSON.parse(match[0]);
 }
 
@@ -212,7 +353,7 @@ async function handleScan(req: Request, env: Env): Promise<Response> {
   const user = await getUser(env, token);
   if (!user) return json(env, req, { error: "Session expired. Reload the app." }, 401);
 
-  let body: { image?: string; crop?: string; part?: string; lat?: number; lng?: number };
+  let body: { image?: string; crop?: string; part?: string; mode?: string; lat?: number; lng?: number };
   try {
     body = await req.json();
   } catch {
@@ -225,6 +366,28 @@ async function handleScan(req: Request, env: Env): Promise<Response> {
 
   const crop = typeof body.crop === "string" ? body.crop.slice(0, 40) : undefined;
   const part: Part = PARTS.includes(body.part as Part) ? (body.part as Part) : "leaf";
+
+  // Chemical mode: read the product label and give safe-use guidance. Not saved.
+  if (body.mode === "chemical") {
+    try {
+      const chemical = await checkChemical(env, image, crop);
+      return json(env, req, { mode: "chemical", chemical });
+    } catch (e) {
+      console.error("chemical check failed", e);
+      return json(env, req, { error: "Label check is unavailable right now. Try again in a moment." }, 502);
+    }
+  }
+
+  // Advice mode: preventive tips only. Not saved, and never creates an outbreak signal.
+  if (body.mode === "advise") {
+    try {
+      const advice = await advise(env, image, crop, part);
+      return json(env, req, { mode: "advise", advice });
+    } catch (e) {
+      console.error("advise failed", e);
+      return json(env, req, { error: "Advice is unavailable right now. Try again in a moment." }, 502);
+    }
+  }
 
   // Run both models at once; segmentation is a bonus, diagnosis is required.
   const [diag, seg] = await Promise.allSettled([diagnose(env, image, crop, part), segment(env, image, SAM_CONCEPTS[part])]);

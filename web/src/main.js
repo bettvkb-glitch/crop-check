@@ -159,6 +159,23 @@ const el = {
 };
 
 let currentImage = null; // JPEG data URL, max 1280px on the long edge
+let scanMode = "diagnose"; // "diagnose" = check a problem, "advise" = preventive advice
+
+const MODE_TEXT = {
+  diagnose: { sub: "Photograph the damaged part: leaf, stem, root, fruit or the whole plant. Natural light works best.", btn: "Check This Crop →" },
+  advise: { sub: "Photograph a healthy crop or your field. We tell you what to watch for, when to spray, weed and feed, and how to grow a better harvest.", btn: "Get Advice →" },
+  chemical: { sub: "Photograph the label of the chemical you want to use. We tell you if it suits your crop, when to apply it and how to stay safe.", btn: "Check This Chemical →" },
+};
+function setMode(m) {
+  scanMode = m;
+  document.querySelectorAll("#mode-seg [data-scan-mode]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.scanMode === m)));
+  $("scan-sub").textContent = MODE_TEXT[m].sub;
+  el.analyze.textContent = MODE_TEXT[m].btn;
+  $("part-field").hidden = m === "chemical";
+  el.result.hidden = true;
+  setStatus();
+}
+document.querySelectorAll("#mode-seg [data-scan-mode]").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.scanMode)));
 
 async function compress(file, maxEdge = 1280, quality = 0.8) {
   const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
@@ -188,6 +205,7 @@ const PART_TIPS = {
   stem: "Show the damaged area up close, including a little healthy stem.",
   root: "Clean off the soil first, then photograph the roots in good light.",
   fruit: "Show the spots or damage on the fruit, grain or pod up close.",
+  field: "Stand back and photograph your crop rows and what is around them: soil, weeds, water, bushes.",
   "whole plant": "Stand back so the whole plant is in the photo, then take a second close-up if you can.",
 };
 function showPartTip() { el.partTip.textContent = PART_TIPS[el.part.value] || ""; }
@@ -199,7 +217,7 @@ function resetScan() {
   currentImage = null;
   el.file.value = ""; $("file2").value = "";
   el.crop.value = "";
-  el.part.value = "leaf"; showPartTip();
+  el.part.value = "leaf"; showPartTip(); setMode("diagnose");
   el.capture.hidden = false; el.stage.hidden = true; el.actions.hidden = true; el.result.hidden = true;
   setStatus();
 }
@@ -224,7 +242,11 @@ function getCoarseLocation() {
 el.analyze.addEventListener("click", async () => {
   if (!currentImage) return;
   el.analyze.disabled = true;
-  setStatus(`Checking your ${el.part.value}. This can take up to 30 seconds on a slow connection.`);
+  const mode = scanMode;
+  setStatus(
+    mode === "chemical" ? "Reading the label. This can take up to 30 seconds."
+    : mode === "advise" ? `Studying your ${el.part.value} to prepare advice. This can take up to 30 seconds.`
+    : `Checking your ${el.part.value}. This can take up to 30 seconds on a slow connection.`);
   try {
     // getSession() refreshes an expired access token automatically.
     const [{ data }, loc] = await Promise.all([supabase.auth.getSession(), getCoarseLocation()]);
@@ -233,11 +255,22 @@ el.analyze.addEventListener("click", async () => {
     const res = await fetch(`${API}/api/scan`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` },
-      body: JSON.stringify({ image: currentImage, crop: el.crop.value.trim() || undefined, part: el.part.value, ...loc }),
+      body: JSON.stringify({ image: currentImage, crop: el.crop.value.trim() || undefined, part: el.part.value, mode, ...loc }),
     });
     const body = await res.json();
     if (res.status === 401) { await signOut(); return; }
     if (!res.ok) throw new Error(body.error || "Request failed");
+
+    if (mode === "chemical") {
+      renderChemical(body.chemical);
+      setStatus();
+      return;
+    }
+    if (mode === "advise") {
+      renderAdvice(body.advice);
+      setStatus();
+      return;
+    }
 
     const matches = parseSam(body.segmentation?.raw);
     if (matches.length) drawOverlay(el.preview.getContext("2d"), matches, 1);
@@ -286,7 +319,78 @@ function renderResult(d) {
     ${section("Do this today", t.act_today)}
     ${section("Low-cost or organic", t.low_cost_or_organic)}
     ${section("Chemical options", t.chemical_options)}
+    ${section("When to apply", d.when_to_apply)}
+    ${d.safety?.length ? `<div class="safe"><h4>Stay safe</h4>${list(d.safety)}</div>` : ""}
     ${section("Prevent it spreading", t.prevention)}`;
+  el.result.hidden = false;
+  el.result.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+const SUIT = {
+  yes: ["ok", "Suits this crop"],
+  no: ["bad", "Not for this crop"],
+  unsure: ["warn", "Check it suits your crop"],
+};
+function renderChemical(d) {
+  const [cls, label] = d.label_readable === false ? ["bad", "Label not clear"] : SUIT[d.suitable_for_crop] || ["warn", "Read the label"];
+  const s = d.safety_steps || {};
+  const section = (title, items) => (items?.length ? `<h4>${title}</h4>${list(items)}` : "");
+  const ingredients = d.active_ingredients?.length ? `Active ingredient: ${d.active_ingredients.map(esc).join(", ")}` : "";
+  el.result.innerHTML = `
+    <span class="badge ${cls}">${esc(label)}</span>${d.type && d.type !== "unknown" ? `<span class="badge warn">${esc(d.type)}</span>` : ""}
+    <h3>${esc(d.product_name || "Unknown product")}</h3>
+    <p>${esc(d.what_its_for || "")}${ingredients ? `<br><small>${ingredients}</small>` : ""}</p>
+    ${d.label_readable === false ? `<p class="expert">We could not read the label clearly. Do not use this product until you know what it is. Take a closer, well-lit photo of the label, or ask your agrovet.</p>` : ""}
+    ${d.suitability_note ? `<p>${esc(d.suitability_note)}</p>` : ""}
+    ${d.warnings?.length ? `<div class="safe"><h4>Warning</h4>${list(d.warnings)}</div>` : ""}
+    ${section("Dose and mixing (from the label)", d.dose_and_mixing)}
+    ${section("Best time to apply", d.best_time_to_apply)}
+    ${section("Do not spray when", d.avoid)}
+    ${section("Wear this", d.protective_gear)}
+    ${section("Before you spray", s.before)}
+    ${section("While spraying", s.while_spraying)}
+    ${section("After spraying", s.after)}
+    ${section("Waiting periods", d.waiting_periods)}
+    ${d.first_aid?.length ? `<div class="safe"><h4>If someone is poisoned</h4>${list(d.first_aid)}</div>` : ""}
+    ${section("Store and dispose safely", d.storage_and_disposal)}
+    ${d.see_expert ? `<p class="expert">Ask your agrovet or agriculture officer to confirm before you use it.</p>` : ""}
+    <p class="fine">We only read what is printed in your photo. The product label is the final rule, so always follow it.</p>`;
+  el.result.hidden = false;
+  el.result.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+const RISK_CLS = { high: "bad", medium: "warn", low: "ok" };
+const HEALTH = {
+  excellent: ["ok", "Looking excellent"],
+  good: ["ok", "Looking good"],
+  fair: ["warn", "Fair, can improve"],
+  needs_attention: ["bad", "Needs attention"],
+};
+function renderAdvice(d) {
+  const [cls, label] = HEALTH[d.health_status] || ["warn", "Advice ready"];
+  const section = (title, items) => (items?.length ? `<h4>${title}</h4>${list(items)}` : "");
+  const risks = (d.early_warnings || []).map((r) =>
+    `<li><span class="badge ${RISK_CLS[r.likelihood] || "warn"}">${esc(r.likelihood || "watch")}</span><b>${esc(r.risk)}</b>${r.why ? `: ${esc(r.why)}` : ""}${r.prevent ? `<br><i>What to do: ${esc(r.prevent)}</i>` : ""}</li>`).join("");
+  const bestTimes = d.best_times?.length
+    ? `<h4>Best time for each job</h4><ul>${d.best_times.map((b) => `<li><b>${esc(b.task)}</b>: ${esc(b.when || "")}${b.why ? ` <i>(${esc(b.why)})</i>` : ""}</li>`).join("")}</ul>`
+    : "";
+  el.result.innerHTML = `
+    <span class="badge ${cls}">${esc(label)}</span>
+    <h3>${esc(d.crop || "Your crop")}${d.growth_stage ? ` · ${esc(d.growth_stage)}` : ""}</h3>
+    <p>${esc(d.summary || "")}</p>
+    ${d.problem_spotted ? `<p class="expert">We can already see signs of ${esc(d.problem_spotted)}. Switch to "Check a problem" and scan the affected part for a full treatment plan.</p>` : ""}
+    ${section("What is going well", d.going_well)}
+    ${risks ? `<h4>Watch out for (early warnings)</h4><ul>${risks}</ul>` : ""}
+    ${section("Do this week", d.do_this_week)}
+    ${section("Grow a better harvest", d.improve_yield)}
+    ${section("Low-cost or organic", d.low_cost_or_organic)}
+    ${bestTimes}
+    ${section("Before you weed", d.before_weeding)}
+    ${d.safety_basics?.length ? `<div class="safe"><h4>Stay safe</h4>${list(d.safety_basics)}</div>` : ""}
+    ${section("Plan for next season", d.next_season)}
+    ${section("Tell us more for better advice", d.ask_farmer)}
+    ${d.see_expert ? `<p class="expert">For advice that fits your soil and weather, talk to your local agriculture officer.</p>` : ""}
+    <p class="fine">Guidance based on the photo only. We can't see your soil or weather.</p>`;
   el.result.hidden = false;
   el.result.scrollIntoView({ behavior: "smooth", block: "start" });
 }
