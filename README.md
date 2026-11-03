@@ -2,6 +2,19 @@
 
 Photograph a sick crop leaf, get a diagnosis and treatment plan, see outbreaks nearby live.
 
+**🌐 Live demo:** https://crop-check.pages.dev
+
+**🎥 Demo video:** https://youtu.be/ujV086F0FaE
+
+**🏆 Hackathon:** Meta AI Developer Hackathon, track: Build for Your World
+
+## Meta models used
+- **SAM 3.1** locates and marks the affected areas on the leaf photo.
+- **Muse Spark** produces the diagnosis and treatment plan.
+
+Both are called through the Meta Model API from a Cloudflare Worker, so the API key never reaches the browser.
+
+## Architecture
 ```
 web/       Vite PWA  -> Cloudflare Pages
 worker/    Cloudflare Worker (API gateway) -> SAM 3.1 + Muse Spark (Meta Model API)
@@ -23,9 +36,8 @@ supabase/  schema.sql (scans, outbreak_signals, RLS, Realtime)
    env vars `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_API_BASE` (your Worker URL).
    Then set the Worker's `ALLOWED_ORIGIN` to your Pages URL.
 
-## Known gaps (next steps)
-- SAM masks: `web/src/sam.js` now parses boxes from SAM 3.1 output and draws them on the photo. Mask payloads
-  (base85) are not decoded yet; use Meta's `@meta-sam/parser` (`decodeMaskToSVGPath`) to upgrade the overlay to outlines.
+## Roadmap
+- Upgrade the SAM overlay from boxes to full outlines: `web/src/sam.js` currently parses boxes from SAM 3.1 output and draws them on the photo. Mask payloads (base85) can be decoded with Meta's `@meta-sam/parser` (`decodeMaskToSVGPath`).
 - Rate limiting on `/api/scan` (Cloudflare Rate Limiting rules or a Durable Object).
 - Offline queue for scans taken without signal.
 
@@ -36,8 +48,10 @@ one, driven by `supabase.auth.onAuthStateChange`. The Worker re-verifies the use
 so the gate is not just cosmetic.
 
 ## Design notes
-- Look follows the Kenya Educators reference: light mint background, white header with the black/red/green flag stripe,
-  green primary buttons, rounded white cards with soft green icon chips, a "Just reported" card strip and a bottom tab bar
-  (Home, Scan, Outbreaks, Profile). Dark theme is kept and switchable from the Profile menu. One font family (Inter);
+- Light, mobile-first design with green primary buttons, rounded cards, and a bottom tab bar
+  (Home, Scan, Outbreaks, Profile). A dark theme is switchable from the Profile menu. One font family (Inter);
   remove the two `<link>` tags in `web/index.html` to fall back to system fonts on the slowest networks.
 - Farmer-help button: set `SUPPORT_WHATSAPP` in `web/src/main.js` (digits with country code). Empty = hidden.
+
+## License
+MIT
